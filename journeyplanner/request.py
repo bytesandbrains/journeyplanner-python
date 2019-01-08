@@ -1,11 +1,21 @@
 from .config import BASE_URL_OPEN, BASE_URL_AUTHENTICATED
-from .error import AuthenticationError, JourneyPlannerError, fromstring as errorfromstring
+from .error import (
+    AuthenticationError,
+    JourneyPlannerError,
+    fromstring as errorfromstring,
+)
 
 from xml.etree import ElementTree
 
 
-from urllib.request import build_opener, HTTPPasswordMgrWithDefaultRealm, HTTPBasicAuthHandler, HTTPError
+from urllib.request import (
+    build_opener,
+    HTTPPasswordMgrWithDefaultRealm,
+    HTTPBasicAuthHandler,
+    HTTPError,
+)
 from urllib.parse import urlencode
+
 
 class Requester:
     def __init__(self):
@@ -25,7 +35,7 @@ class Requester:
         tuples = [t for t in tuples if t[1] is not None]
         querystring = urlencode(tuples)
 
-        url = '{}/{}?{}'.format(self.baseurl, service, querystring)
+        url = "{}/{}?{}".format(self.baseurl, service, querystring)
 
         try:
             response = self.opener.open(url)
@@ -33,18 +43,18 @@ class Requester:
             return _parse(response)
         except HTTPError as error:
             if error.code == 401:
-                raise AuthenticationError('Invalid credentials')
+                raise AuthenticationError("Invalid credentials")
 
 
 def _parse(file):
     try:
         tree = ElementTree.parse(file)
         root = tree.getroot()
-        errormessage = root.get('error')
+        errormessage = root.get("error")
 
         if errormessage:
             raise errorfromstring(errormessage)
 
         return root
     except ElementTree.ParseError:
-        raise JourneyPlannerError('Invalid server response') from None
+        raise JourneyPlannerError("Invalid server response") from None

@@ -1,5 +1,7 @@
 # Journeyplanner
 
+A client for accessing the Journey Planner (Rejseplanen) API.
+
 ## Installation
 The journeyplanner library can be installed using pip:
 

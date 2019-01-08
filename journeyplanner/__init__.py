@@ -17,7 +17,7 @@ class JourneyPlanner:
         planner database. Possible matches might be stops/stations, points of
         interest and addresses.
         """
-        tree = self.requester.get('locations', input=query)
+        tree = self.requester.get("locations", input=query)
 
         yield from (Location(element) for element in tree)
 
@@ -30,18 +30,29 @@ class JourneyPlanner:
         routed.
         """
         coordinate = Coordinate(latitude=latitude, longitude=longitude)
-        tree = self.requester.get('stopsNearby',
-                                  coordX=coordinate.x,
-                                  coordY=coordinate.y,
-                                  maxRadius=radius,
-                                  maxNumber=limit)
+        tree = self.requester.get(
+            "stopsNearby",
+            coordX=coordinate.x,
+            coordY=coordinate.y,
+            maxRadius=radius,
+            maxNumber=limit,
+        )
 
         yield from (Stop(element) for element in tree)
 
-    def trip(self, origin, destination, *, via=None,
-             date=None, time=None,
-             arrivals=False,
-             bus=True, metro=True, train=True):
+    def trip(
+        self,
+        origin,
+        destination,
+        *,
+        via=None,
+        date=None,
+        time=None,
+        arrivals=False,
+        bus=True,
+        metro=True,
+        train=True
+    ):
         """The trip service calculates a trip from a specified origin to a
         specified destination. These might be stop/station IDs or coordinates
         based on addresses and points of interest validated by the location
@@ -56,28 +67,36 @@ class JourneyPlanner:
         for key, endpoint in endpoints.items():
             try:
                 (x, y, name) = (endpoint.x, endpoint.y, endpoint.name)
-                endpointparams.update({
-                    '{}CoordX'.format(key): x,
-                    '{}CoordY'.format(key): y,
-                    '{}CoordName'.format(key): name if name else key,
-                })
+                endpointparams.update(
+                    {
+                        "{}CoordX".format(key): x,
+                        "{}CoordY".format(key): y,
+                        "{}CoordName".format(key): name if name else key,
+                    }
+                )
             except AttributeError:
-                endpointparams['{}Id'.format(key)] = endpoint
+                endpointparams["{}Id".format(key)] = endpoint
 
-        tree = self.requester.get('trip',
-                                  date=date,
-                                  time=time,
-                                  viaId=via,
-                                  searchForArrival=int(arrivals),
-                                  useBus=int(bus),
-                                  useMetro=int(metro),
-                                  useTrain=int(train),
-                                  **endpointparams)
+        if date is not None:
+            date = date.strftime("%d.%m.%y")
+
+        tree = self.requester.get(
+            "trip",
+            date=date,
+            time=time,
+            viaId=via,
+            searchForArrival=int(arrivals),
+            useBus=int(bus),
+            useMetro=int(metro),
+            useTrain=int(train),
+            **endpointparams
+        )
 
         yield from (Trip(element) for element in tree)
 
-    def _stationboard(self, service, id, *, date=None, time=None,
-                      bus=True, metro=True, train=True):
+    def _stationboard(
+        self, service, id, *, date=None, time=None, bus=True, metro=True, train=True
+    ):
         """The station board board can be retrieved by the service
         departureBoard. This method will return the next 20 departures (or less
         if not existing) from a given point in time.
@@ -86,37 +105,43 @@ class JourneyPlanner:
         arriving journeys at a specified stop. The parameters are identical to
         the parameters of the departureBoard service.
         """
-        tree = self.requester.get(service,
-                                  id=id,
-                                  date=date,
-                                  time=time,
-                                  useBus=int(bus),
-                                  useMetro=int(metro),
-                                  useTrain=int(train))
+        tree = self.requester.get(
+            service,
+            id=id,
+            date=date,
+            time=time,
+            useBus=int(bus),
+            useMetro=int(metro),
+            useTrain=int(train),
+        )
 
         yield from tree
 
     def arrivalboard(self, *args, **kwargs):
-        return self._stationboard('arrivalBoard', *args, **kwargs)
+        return self._stationboard("arrivalBoard", *args, **kwargs)
 
     def departureboard(self, *args, **kwargs):
-        return self._stationboard('departureBoard', *args, **kwargs)
+        return self._stationboard("departureBoard", *args, **kwargs)
 
-    def multidepartureboard(self, *ids, date=None, time=None, bus=True, metro=True, train=True):
+    def multidepartureboard(
+        self, *ids, date=None, time=None, bus=True, metro=True, train=True
+    ):
         """The multi departure board is a combined departure board for up to 10
         different stops. It can be retrieved by a service called
         multiDepartureBoard. This method will return the next 20 departures (or
         less if not existing) of the defined stops from a given point in time.
         """
         if len(ids) > 10:
-            raise Exception('MultiDepartureBoard does not support more than 10 ids')
+            raise Exception("MultiDepartureBoard does not support more than 10 ids")
 
-        tree = self.requester.get('multiDepartureBoard',
-                                  date=date,
-                                  time=time,
-                                  useBus=int(bus),
-                                  useMetro=int(metro),
-                                  useTrain=int(train))
+        tree = self.requester.get(
+            "multiDepartureBoard",
+            date=date,
+            time=time,
+            useBus=int(bus),
+            useMetro=int(metro),
+            useTrain=int(train),
+        )
 
         yield from tree
 
@@ -129,6 +154,6 @@ class JourneyPlanner:
         additional information like specific attributes about facilities and
         other texts.
         """
-        tree = self.requester.get('journeyDetail', ref=reference)
+        tree = self.requester.get("journeyDetail", ref=reference)
 
         yield from tree
